@@ -1,0 +1,260 @@
+//
+//  iImagePickerController.m
+//  iimagePickerContoller
+//
+//  Created by Rajesh on 9/11/15.
+//  Copyright (c) 2015 Org. All rights reserved.
+//
+
+#import "iImagePickerController.h"
+#import <AVFoundation/AVFoundation.h>
+#import "UIImage+fixOrientation.h"
+typedef struct
+{
+    BOOL isSecondaryCamAvail;
+    BOOL isSecondaryCam;
+}ImagePickerConfig;
+
+@interface iImagePickerController ()
+{
+    AVCaptureSession *captureSession;
+    AVCaptureVideoPreviewLayer *captureVideoPreviewLayer;
+    AVCaptureDeviceInput *captureDeviceInput;
+    ImagePickerConfig config;
+    AVCaptureStillImageOutput *stillImageOutput;
+    NSMutableArray *arrImages;
+    UIButton *btnPreview;
+    UIButton *btnCapture;
+    UIButton *btnDone;
+    UIButton *btnRotate;
+}
+@end
+
+@implementation iImagePickerController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    arrImages = [NSMutableArray new];
+    captureSession = [[AVCaptureSession alloc]init];
+    captureSession.sessionPreset = AVCaptureSessionPresetPhoto;
+
+    captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc]initWithSession:captureSession];
+    captureVideoPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    captureVideoPreviewLayer.frame = self.view.bounds;
+    [self.view.layer addSublayer:captureVideoPreviewLayer];
+    
+    NSArray *arrVideoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    config.isSecondaryCamAvail = arrVideoDevices.count > 1;
+    config.isSecondaryCam = NO;
+    if (arrVideoDevices.count)
+    {
+        captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:arrVideoDevices[0] error:nil];
+        [captureSession addInput:captureDeviceInput];
+        [captureSession startRunning];
+    }
+    {
+        stillImageOutput = [[AVCaptureStillImageOutput alloc]init];
+        NSDictionary * outputSettings = [[NSDictionary alloc] initWithObjectsAndKeys: AVVideoCodecJPEG, AVVideoCodecKey, nil];
+        [stillImageOutput setOutputSettings:outputSettings];
+        [captureSession addOutput:stillImageOutput];
+    }
+    {
+        UIView *vwOverlayTop = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 40)];
+        [vwOverlayTop setAutoresizingMask:UIViewAutoresizingFlexibleWidth];
+        [vwOverlayTop setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:1.0]];
+        [self.view addSubview:vwOverlayTop];
+        
+        UIButton *btnCancel = [[UIButton alloc] initWithFrame:CGRectMake(0, 15, 60, 20)];
+        [btnCancel setTitle:@"Cancel" forState:UIControlStateNormal];
+        btnCancel.titleLabel.font = [UIFont systemFontOfSize:13];
+        [btnCancel addTarget:self action:@selector(btnCancelTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [vwOverlayTop addSubview:btnCancel];
+        
+        if (config.isSecondaryCamAvail)
+        {
+             btnRotate = [[UIButton alloc] initWithFrame:CGRectMake(self.view.bounds.size.width - 40, 10, 45, 33)];
+            [btnRotate setAutoresizingMask:UIViewAutoresizingFlexibleLeftMargin];
+            //[btnRotate setTitle:@"R" forState:UIControlStateNormal];
+            [btnRotate setImage:[UIImage imageNamed:@"frontcam.png"] forState:UIControlStateNormal];
+            [btnRotate addTarget:self action:@selector(btnRotateTapped:) forControlEvents:UIControlEventTouchUpInside];
+            [vwOverlayTop addSubview:btnRotate];
+        }
+    }
+    
+    {
+        UIView *vwOverlay = [[UIView alloc] initWithFrame:CGRectMake(0, self.view.bounds.size.height - 90, self.view.bounds.size.width, 90)];
+        [vwOverlay setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin];
+        [vwOverlay setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:.3]];
+        [self.view addSubview:vwOverlay];
+        
+         btnPreview = [[UIButton alloc] initWithFrame:CGRectMake(10, (vwOverlay.bounds.size.height - 60)/2, 60, 60)];
+        [btnPreview.layer setBorderColor:[[UIColor whiteColor] CGColor]];
+        [btnPreview.layer setBorderWidth:2.];
+        [btnPreview.layer setCornerRadius:2.];
+        [btnPreview setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        [btnPreview addTarget:self action:@selector(btnPreviewTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [vwOverlay addSubview:btnPreview];
+        [btnPreview setHidden:YES];
+        
+        UIView *vwCapture = [[UIView alloc] initWithFrame:CGRectMake(CGRectGetMidX(self.view.bounds)-30, 10, 65, 65)];
+        [vwCapture setAutoresizingMask:UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin];
+        [vwCapture.layer setBorderColor:[UIColor whiteColor].CGColor];
+        [vwCapture.layer setBorderWidth:3.];
+        [vwCapture.layer setCornerRadius:vwCapture.bounds.size.width/2];
+        [vwOverlay addSubview:vwCapture];
+        
+         btnCapture = [[UIButton alloc] initWithFrame:CGRectInset(vwCapture.bounds, 5, 5)];
+        [btnCapture setBackgroundColor:[UIColor whiteColor]];
+        [btnCapture setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        [btnCapture.layer setCornerRadius:btnCapture.bounds.size.width/2];
+        [btnCapture addTarget:self action:@selector(btnCapturedTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [vwCapture addSubview:btnCapture];
+        
+         btnDone = [[UIButton alloc] initWithFrame:CGRectMake(vwOverlay.bounds.size.width - 60, (vwOverlay.bounds.size.height - 30)/2, 60, 30)];
+        [btnDone setAutoresizingMask:UIViewAutoresizingFlexibleLeftMargin];
+        [btnDone setTitle:@"Done" forState:UIControlStateNormal];
+        [btnDone addTarget:self action:@selector(btnDoneTapped:) forControlEvents:UIControlEventTouchUpInside];
+        [vwOverlay addSubview:btnDone];
+    }
+    //Orientation handling
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self  selector:@selector(orientationChanged:) name:UIDeviceOrientationDidChangeNotification  object:nil];
+    }
+}
+
+- (void)orientationChanged:(NSNotification *)notification
+{
+    CGAffineTransform transform;
+    switch ([[UIDevice currentDevice] orientation])
+    {
+        case UIDeviceOrientationPortraitUpsideDown:
+            return;
+            break;
+        case UIDeviceOrientationLandscapeLeft:
+            transform = CGAffineTransformMakeRotation(M_PI_2);
+            break;
+        case UIDeviceOrientationLandscapeRight:
+            transform = CGAffineTransformMakeRotation(M_PI + M_PI_2);
+            break;
+        default:
+            transform = CGAffineTransformMakeRotation(0.0);
+            break;
+    }
+    [UIView animateWithDuration:.3 animations:^{
+        [btnPreview setTransform:transform];
+        [btnCapture setTransform:transform];
+        [btnDone setTransform:transform];
+        [btnRotate setTransform:transform];
+    }];
+}
+
+- (BOOL)prefersStatusBarHidden
+{
+    return YES;
+}
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+{
+    return UIInterfaceOrientationMaskPortrait;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+}
+
+- (void)btnCancelTapped:(UIButton *)button
+{
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)btnRotateTapped:(UIButton *)button
+{
+    NSArray *arrVideoDevices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    [captureSession beginConfiguration];
+    [captureSession removeInput:captureDeviceInput];
+    if (config.isSecondaryCam) captureDeviceInput  = [AVCaptureDeviceInput deviceInputWithDevice:arrVideoDevices[0] error:nil];
+    else captureDeviceInput  = [AVCaptureDeviceInput deviceInputWithDevice:arrVideoDevices[1] error:nil];
+    [captureSession addInput:captureDeviceInput];
+    [captureSession commitConfiguration];
+    config.isSecondaryCam = !config.isSecondaryCam;
+}
+
+- (void)btnCapturedTapped:(UIButton *)button
+{
+    if (button.titleLabel.text.integerValue==self.maximumImageClick) {
+      
+        NSString *title;
+    if (self.maximumImageClick==1) {
+        title = [NSString stringWithFormat:NSLocalizedString(@"Only %d photo", nil), self.maximumImageClick];
+        }
+        else{
+        title = [NSString stringWithFormat:NSLocalizedString(@"Only %d photos", nil), self.maximumImageClick];
+        }
+        NSString *message = [NSString stringWithFormat:NSLocalizedString(@"Maximum 4 images can be attached to a post.", nil), self.maximumImageClick];
+        [[[UIAlertView alloc] initWithTitle:title
+                                    message:message
+                                   delegate:nil
+                          cancelButtonTitle:nil
+                          otherButtonTitles:NSLocalizedString(@"OK", nil), nil] show];
+     }
+    else{
+        [stillImageOutput captureStillImageAsynchronouslyFromConnection:[stillImageOutput connectionWithMediaType:AVMediaTypeVideo] completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
+            if (error)
+            {
+                UIAlertController *alertController = [UIAlertController alertControllerWithTitle:nil message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
+                [self presentViewController:alertController animated:YES completion:nil];
+                [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    [self dismissViewControllerAnimated:YES completion:nil];
+                }]];
+            }
+            else if (imageSampleBuffer)
+            {
+                UIView *viewCapture = [[UIView alloc] initWithFrame:self.view.bounds];
+                [viewCapture setBackgroundColor:[UIColor colorWithWhite:0 alpha:.3]];
+                [viewCapture setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
+                [self.view addSubview:viewCapture];
+                [UIView animateWithDuration:.2 animations:^{
+                    [viewCapture setTransform:CGAffineTransformMakeScale(.01, .01)];
+                } completion:^(BOOL finished) {
+                    [viewCapture removeFromSuperview];
+                }];
+                UIImage *capturedImage = [[UIImage alloc]initWithData:[AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer] scale:1];
+                if (capturedImage)
+                {
+                    [arrImages addObject:[capturedImage fixOrientation]];
+                    [button setTitle:[NSString stringWithFormat:@"%d",[button.titleLabel.text intValue] + 1] forState:UIControlStateNormal];
+                    [btnPreview setHidden:NO];
+                    [btnPreview setImage:capturedImage forState:UIControlStateNormal];
+                }
+            }
+        }];
+    }
+}
+
+- (void)btnDoneTapped:(UIButton *)button
+{
+    [self dismissViewControllerAnimated:YES completion:^{
+        [self.delegate imagesPickingFinish:arrImages];
+       // [_viewController previewImages:arrImages];
+    }];
+}
+
+- (void)btnPreviewTapped:(UIButton *)button
+{
+    ///For later version
+//    [self dismissViewControllerAnimated:YES completion:^{
+//        [self.delegate previewImagesFromTopController:arrImages];
+//        // [_viewController previewImages:arrImages];
+//    }];
+  //  [_viewController previewImagesFromTopController:arrImages];
+}
+
+- (void)dealloc
+{
+    [captureSession stopRunning];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+@end

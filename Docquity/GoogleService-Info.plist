@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>874968311035-lscbjsk4kj45n0k5lk7m6v4vqtq8d1g3.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.874968311035-lscbjsk4kj45n0k5lk7m6v4vqtq8d1g3</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>874968311035-tvi1qs5o7rb66duhpv41plnti6fqa0sp.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyC8jiLJdLhLZGvH4mBLyGVJFurNQxMhqDQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>874968311035</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.docquity</string>
+	<key>PROJECT_ID</key>
+	<string>docquity-1269</string>
+	<key>STORAGE_BUCKET</key>
+	<string>docquity-1269.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:874968311035:ios:c944db5f4018cbd2</string>
+	<key>DATABASE_URL</key>
+	<string>https://docquity-1269.firebaseio.com</string>
+	<key>TRACKING_ID</key>
+	<string>UA-91304476-1</string>
+</dict>
+</plist>

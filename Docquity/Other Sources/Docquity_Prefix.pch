@@ -1,0 +1,44 @@
+//
+// Prefix header for all source files of the 'iPhoneXMPP' target in the 'iPhoneXMPP' project
+//
+#import <Availability.h>
+
+#ifndef __IPHONE_3_0
+#warning "This project uses features only available in iPhone SDK 3.0 and later."
+#endif
+
+#ifndef UUChatTableView_PrefixHeader_pch
+#define UUChatTableView_PrefixHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+
+#endif
+
+#ifdef __OBJC__
+
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+    #import "NSString+HTML.h"
+  //  #import "DefineAndConstants.h"
+    #import <MobileCoreServices/MobileCoreServices.h>
+    #import <SystemConfiguration/SystemConfiguration.h>
+    #import <Quickblox/Quickblox.h>
+    #import <Quickblox/QBMulticastDelegate.h>
+    //#import "QMServices.h"
+    #import "SVProgressHUD.h"
+    #import "Constants.h"
+#import "WebServiceCall.h"
+#import "UIImageView+WebCache.h"
+#import "DefineAndConstants.h"
+#import "AppDelegate.h"
+//#import "Analytics.h"
+#import <Google/Analytics.h>
+
+
+#import "Localytics.h"
+#import "UIImageView+Letters.h"
+#import "UIViewController+navigationBar.h"
+
+
+#endif
